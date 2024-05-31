@@ -62,7 +62,7 @@ int main(int argc, char **argv)
   std::string request(buffer);
 
   std::string response="";
-  response=request.starts_with("GET /index.html HTTP/1.1\r\n")?"HTTP/1.1 200 OK\r\n\r\n":"HTTP/1.1 404 Not Found\r\n\r\n";
+  response=request.starts_with("GET / HTTP/1.1\r\n")?"HTTP/1.1 200 OK\r\n\r\n":"HTTP/1.1 404 Not Found\r\n\r\n";
   //std::cout<<response<<"\n";
   send(client, response.c_str(), response.length(), 0);
   std::cout << "Client connected\n";
