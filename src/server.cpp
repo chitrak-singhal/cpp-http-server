@@ -101,7 +101,7 @@ int main(int argc, char **argv)
           break;
         }
       }
-      response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n" + text;
+      response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
   }
   else
   {
