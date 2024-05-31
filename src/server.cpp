@@ -56,7 +56,14 @@ int main(int argc, char **argv)
   std::cout << "Waiting for a client to connect...\n";
 
   int client = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_len);
-  std::string response = "HTTP/1.1 200 OK\r\n\r\n";
+  char buffer[4096];
+  int bytes_received = recv(client, buffer, sizeof(buffer) - 1, 0);
+  buffer[bytes_received] = '\0'; 
+  std::string request(buffer);
+
+  std::string response="";
+  response=request.starts_with("GET /index.html HTTP/1.1\r\n")?"HTTP/1.1 200 OK\r\n\r\n":"HTTP/1.1 404 Not Found\r\n\r\n";
+  //std::cout<<response<<"\n";
   send(client, response.c_str(), response.length(), 0);
   std::cout << "Client connected\n";
 
