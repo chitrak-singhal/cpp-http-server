@@ -86,8 +86,22 @@ int main(int argc, char **argv)
   else if (endpoint.starts_with("/echo"))
   {
       string text= endpoint.substr(6);
-      response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
+      response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n" + text;
       
+  }
+  else if (endpoint.starts_with("/user"))
+  {
+    string text;
+      for (auto &elem:comps)
+      {
+        if (elem.starts_with("User"))
+        {
+          vector<string> temp = split(elem, " ");
+          text = temp[1];
+          break;
+        }
+      }
+      response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n" + text;
   }
   else
   {
