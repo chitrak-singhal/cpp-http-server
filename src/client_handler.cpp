@@ -48,7 +48,10 @@ void handleClient(int client, string directory)
         {
             cout<<"hi\n";
             vector<string> temp = split(elem, " ");
-            encoding = temp[1]; 
+            for (auto &encod: temp)
+            {
+                if (case_insen_starts_with(encod,"gzip")) encoding = "gzip";
+            }
             break;
         }
     }
