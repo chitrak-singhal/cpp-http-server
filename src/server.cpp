@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include<bits/stdc++.h>
+#include <thread>
 using namespace std;
 
 vector<string> split(string &request, string delim)
@@ -21,6 +22,50 @@ vector<string> split(string &request, string delim)
       ss.ignore(delim.size()-1);
     }
     return comps;
+}
+
+void handleClient(int client)
+{
+  char buffer[4096];
+  int bytes_received = recv(client, buffer, sizeof(buffer) - 1, 0);
+  buffer[bytes_received] = '\0'; 
+  string request(buffer);
+
+  vector<string> comps = split(request, "\r\n");
+  vector<string> comps2 = split(comps[0], " ");
+  string method = comps2[0];
+  string endpoint = comps2[1];
+  string response="";
+  if (endpoint=="/")
+      response = "HTTP/1.1 200 OK\r\n\r\n";
+  else if (endpoint.starts_with("/echo"))
+  {
+      string text= endpoint.substr(6);
+      response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
+      
+  }
+  else if (endpoint.starts_with("/user"))
+  {
+    string text;
+      for (auto &elem:comps)
+      {
+        if (elem.starts_with("User"))
+        {
+          vector<string> temp = split(elem, " ");
+          text = temp[1];
+          break;
+        }
+      }
+      response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
+  }
+  else
+  {
+      response = "HTTP/1.1 404 Not Found\r\n\r\n";
+  }
+
+  send(client, response.c_str(), response.length(), 0);
+  cout << "Client connected\n";
+
 }
 
 int main(int argc, char **argv)
@@ -65,51 +110,17 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  struct sockaddr_in client_addr;
-  int client_addr_len = sizeof(client_addr);
-
-  cout << "Waiting for a client to connect...\n";
-
-  int client = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_len);
-  char buffer[4096];
-  int bytes_received = recv(client, buffer, sizeof(buffer) - 1, 0);
-  buffer[bytes_received] = '\0'; 
-  string request(buffer);
-
-  vector<string> comps = split(request, "\r\n");
-  vector<string> comps2 = split(comps[0], " ");
-  string method = comps2[0];
-  string endpoint = comps2[1];
-  string response="";
-  if (endpoint=="/")
-      response = "HTTP/1.1 200 OK\r\n\r\n";
-  else if (endpoint.starts_with("/echo"))
+  while(true)
   {
-      string text= endpoint.substr(6);
-      response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
-      
-  }
-  else if (endpoint.starts_with("/user"))
-  {
-    string text;
-      for (auto &elem:comps)
-      {
-        if (elem.starts_with("User"))
-        {
-          vector<string> temp = split(elem, " ");
-          text = temp[1];
-          break;
-        }
-      }
-      response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
-  }
-  else
-  {
-      response = "HTTP/1.1 404 Not Found\r\n\r\n";
-  }
+    struct sockaddr_in client_addr;
+    int client_addr_len = sizeof(client_addr);
 
-  send(client, response.c_str(), response.length(), 0);
-  cout << "Client connected\n";
+    cout << "Waiting for a client to connect...\n";
+
+    int client = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_len);
+     thread(handleClient, client).detach();
+  }
+  
 
   close(server_fd);
 
