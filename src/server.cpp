@@ -24,7 +24,7 @@ vector<string> split(string &request, string delim)
     return comps;
 }
 
-void handleClient(int client)
+void handleClient(int client, string directory)
 {
   char buffer[4096];
   int bytes_received = recv(client, buffer, sizeof(buffer) - 1, 0);
@@ -58,6 +58,25 @@ void handleClient(int client)
       }
       response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
   }
+  else if (endpoint.starts_with("/file"))
+  {
+    string filepath = directory+endpoint.substr(5);
+
+    ifstream file(filepath);
+    if (file)
+    {
+        stringstream content;
+        content << file.rdbuf();
+        file.close();
+        string text = content.str();
+        response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
+    }
+    else
+    {
+        // File not found response
+        response = "HTTP/1.1 404 Not Found\r\n\r\nFile not found";
+    }
+  }
   else
   {
       response = "HTTP/1.1 404 Not Found\r\n\r\n";
@@ -65,26 +84,31 @@ void handleClient(int client)
 
   send(client, response.c_str(), response.length(), 0);
   cout << "Client connected\n";
-
+  close(client);
 }
 
 int main(int argc, char **argv)
 {
-  // Flush after every cout / cerr
   cout << unitbuf;
   cerr << unitbuf;
 
-  // Uncomment this block to pass the first stage
-  //
+  string directory;
+  for (int i=1;i<argc;i++)
+  {
+    if (strcmp(argv[i],"--directory")==0&&i+1<argc)
+    {
+      directory  = argv[i+1]; break; 
+      cout<<directory<<"xxxx\n";
+    }
+  }
+
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (server_fd < 0)
   {
     cerr << "Failed to create server socket\n";
     return 1;
   }
-  //
-  // // Since the tester restarts your program quite often, setting SO_REUSEADDR
-  // // ensures that we don't run into 'Address already in use' errors
+
   int reuse = 1;
   if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
   {
@@ -118,7 +142,7 @@ int main(int argc, char **argv)
     cout << "Waiting for a client to connect...\n";
 
     int client = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_len);
-     thread(handleClient, client).detach();
+     thread(handleClient, client,directory).detach();
   }
   
 
