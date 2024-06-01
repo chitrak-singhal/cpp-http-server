@@ -58,10 +58,9 @@ void handleClient(int client, string directory)
       }
       response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
   }
-  else if (endpoint.starts_with("/file"))
+  else if (endpoint.starts_with("/files"))
   {
-    string filepath = directory+endpoint.substr(5);
-
+    string filepath = directory+endpoint.substr(6);
     ifstream file(filepath);
     if (file)
     {
@@ -73,7 +72,6 @@ void handleClient(int client, string directory)
     }
     else
     {
-        // File not found response
         response = "HTTP/1.1 404 Not Found\r\n\r\nFile not found";
     }
   }
@@ -97,8 +95,8 @@ int main(int argc, char **argv)
   {
     if (strcmp(argv[i],"--directory")==0&&i+1<argc)
     {
-      directory  = argv[i+1]; break; 
-      cout<<directory<<"xxxx\n";
+      directory  = argv[i+1];
+      break;
     }
   }
 
