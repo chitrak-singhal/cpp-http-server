@@ -26,6 +26,41 @@ bool case_insen_starts_with(string &a,string b)
     return true;
 }
 
+string gzip_compress(const string &data) {
+    z_stream zs;
+    memset(&zs, 0, sizeof(zs));
+
+    if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
+        throw runtime_error("deflateInit2 failed while compressing.");
+    }
+
+    zs.next_in = (Bytef *)data.data();
+    zs.avail_in = data.size();
+
+    int ret;
+    char outbuffer[32768];
+    string outstring;
+
+    do {
+        zs.next_out = reinterpret_cast<Bytef *>(outbuffer);
+        zs.avail_out = sizeof(outbuffer);
+
+        ret = deflate(&zs, Z_FINISH);
+
+        if (outstring.size() < zs.total_out) {
+            outstring.append(outbuffer, zs.total_out - outstring.size());
+        }
+    } while (ret == Z_OK);
+
+    deflateEnd(&zs);
+
+    if (ret != Z_STREAM_END) {
+        throw runtime_error("Exception during zlib compression: (" + to_string(ret) + ") " + zs.msg);
+    }
+
+    return outstring;
+}
+
 void handleClient(int client, string directory)
 {
   char buffer[4096];
@@ -64,6 +99,7 @@ void handleClient(int client, string directory)
     {
         cout<<encoding<<"\n";
         string text= endpoint.substr(6);
+        text = gzip_compress(text);
         response ="HTTP/1.1 200 OK\r\nContent-Encoding: "+ encoding +"\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
     }      
   }

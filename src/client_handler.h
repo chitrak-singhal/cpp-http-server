@@ -12,6 +12,7 @@
 #include <netdb.h>
 #include<bits/stdc++.h>
 #include <thread>
+#include<zlib.h>
 using namespace std;
 
 vector<string> split(string &request, string delim);
