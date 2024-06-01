@@ -14,6 +14,18 @@ vector<string> split(string &request, string delim)
     return comps;
 }
 
+bool case_insen_starts_with(string &a,string b)
+{
+    if (b.size()>a.size())
+         return false;
+    int n = b.size();
+    for (int i=0;i<n;i++)
+    {
+        if (b[i]!=a[i]) return false;
+    }
+    return true;
+}
+
 void handleClient(int client, string directory)
 {
   char buffer[4096];
@@ -29,9 +41,28 @@ void handleClient(int client, string directory)
       response = "HTTP/1.1 200 OK\r\n\r\n";
   else if (endpoint.starts_with("/echo"))
   {
-      string text= endpoint.substr(6);
-      response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
-      
+    string encoding = "";
+    for (auto &elem: comps)
+    {
+        if (case_insen_starts_with(elem, "Accept-Encoding"))
+        {
+            cout<<"hi\n";
+            vector<string> temp = split(elem, " ");
+            encoding = temp[1]; 
+            break;
+        }
+    }
+    if (encoding!="gzip")
+    {
+        string text= endpoint.substr(6);
+        response ="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
+    }
+    else
+    {
+        cout<<encoding<<"\n";
+        string text= endpoint.substr(6);
+        response ="HTTP/1.1 200 OK\r\nContent-Encoding: "+ encoding +"\r\nContent-Type: text/plain\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
+    }      
   }
   else if (endpoint.starts_with("/user"))
   {
@@ -59,7 +90,7 @@ void handleClient(int client, string directory)
             content << file.rdbuf();
             file.close();
             string text = content.str();
-            response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
+            response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n"+ text;
         }
         else
         {
