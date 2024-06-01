@@ -20,7 +20,6 @@ void handleClient(int client, string directory)
   int bytes_received = recv(client, buffer, sizeof(buffer) - 1, 0);
   buffer[bytes_received] = '\0'; 
   string request(buffer);
-
   vector<string> comps = split(request, "\r\n");
   vector<string> comps2 = split(comps[0], " ");
   string method = comps2[0];
@@ -51,19 +50,41 @@ void handleClient(int client, string directory)
   else if (endpoint.starts_with("/files"))
   {
     string filepath = directory+endpoint.substr(6);
-    ifstream file(filepath);
-    if (file)
+    if (method=="GET")
     {
-        stringstream content;
-        content << file.rdbuf();
-        file.close();
-        string text = content.str();
-        response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
+        ifstream file(filepath);
+        if (file)
+        {
+            stringstream content;
+            content << file.rdbuf();
+            file.close();
+            string text = content.str();
+            response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + to_string(text.size()) + "\r\n\r\n" + text;
+        }
+        else
+        {
+            response = "HTTP/1.1 404 Not Found\r\n\r\nFile not found";
+        }
     }
-    else
+    else if (method=="POST")
     {
-        response = "HTTP/1.1 404 Not Found\r\n\r\nFile not found";
+        string text = comps[comps.size()-1];
+        ofstream outfile(filepath);
+
+        if (outfile.is_open()) 
+        {
+            outfile << text;
+            outfile.close();
+            response = "HTTP/1.1 201 OK\r\n\r\n";
+            cout << "Content saved to 'output.txt' successfully.\n";
+        } 
+        else 
+        {
+            cerr << "Error opening the output file.\n";
+            response = "HTTP/1.1 404 Not Found\r\n\r\n";
+        }
     }
+    
   }
   else
   {
