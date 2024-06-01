@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  int reuse = 1;
+  ssize_t reuse = 1;
   if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
   {
     cerr << "setsockopt failed\n";
