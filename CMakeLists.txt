@@ -7,4 +7,5 @@ file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
 add_executable(server ${SOURCE_FILES})
 
 target_link_libraries(server pthread)
-target_link_libraries(server zlib)
+find_package(ZLIB REQUIRED)
+target_link_libraries(server ZLIB::ZLIB)
