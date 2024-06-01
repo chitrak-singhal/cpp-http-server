@@ -75,7 +75,7 @@ void handleClient(int client, string directory)
         {
             outfile << text;
             outfile.close();
-            response = "HTTP/1.1 201 OK\r\n\r\n";
+            response = "HTTP/1.1 201 Created\r\n\r\n";
             cout << "Content saved to 'output.txt' successfully.\n";
         } 
         else 
